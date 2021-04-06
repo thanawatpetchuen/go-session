@@ -12,20 +12,14 @@ import (
 )
 
 type Format struct {
-	Timestamp time.Time
-	URL       string
+	Timestamp time.Time `json:"timestamp"`
+	URL       string    `json:"url"`
 }
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/", MyHandler)
-	router.HandleFunc("/get", func(rw http.ResponseWriter, r *http.Request) {
-		session, _ := store.Get(r, "session-name")
-		rw.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(rw).Encode(session.Values["foo"]); err != nil {
-			log.Fatal(err)
-		}
-	})
+	router.HandleFunc("/set", SetSession)
+	router.HandleFunc("/get", GetSession)
 	return router
 }
 
