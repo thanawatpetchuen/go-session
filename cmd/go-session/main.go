@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/thanawatpetchuen/gos"
+	"github.com/thanawatpetchuen/gos/internal/gos"
 )
 
 func main() {
