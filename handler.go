@@ -2,19 +2,22 @@ package gos
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 )
 
-var name = "key"
-var store = sessions.NewCookieStore([]byte(name))
+const COOKIE_STORE_NAME = "key"
+const SESSION_NAME = "gos"
+const COOKIE_TTL = 10
+
+var store = sessions.NewCookieStore([]byte(COOKIE_STORE_NAME))
 
 func SetSession(w http.ResponseWriter, r *http.Request) {
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty.
-	session, _ := store.Get(r, "session-name")
+	session, _ := store.Get(r, SESSION_NAME)
 
 	body := LoginBody{}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -24,7 +27,11 @@ func SetSession(w http.ResponseWriter, r *http.Request) {
 
 	// Set some session values.
 	session.Values["user"] = body.Username
+	session.Values["id"] = uuid.New().String()
 	// Save it before we write to the response/return from the handler.
+	// session.Options.Secure = true
+	session.Options.MaxAge = COOKIE_TTL
+
 	err := session.Save(r, w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -33,13 +40,18 @@ func SetSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetSession(rw http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "session-name")
+	session, _ := store.Get(r, SESSION_NAME)
+	userName, ok := GetUser(rw, session)
+	if !ok {
+		return
+	}
+	sessionId, ok := GetSessionId(rw, session)
+	if !ok {
+		return
+	}
 	user := User{
-		Username: session.Values["user"].(string),
+		Username: userName,
 	}
-	ContentJSON(rw)
-	rw.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(rw).Encode(user); err != nil {
-		log.Fatal(err)
-	}
+	response := NewSessionResponse(user, sessionId)
+	JSONResponse(rw, response)
 }

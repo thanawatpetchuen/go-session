@@ -12,8 +12,8 @@ import (
 )
 
 type Format struct {
-	Timestamp time.Time `json:"timestamp"`
-	URL       string    `json:"url"`
+	Timestamp string `json:"timestamp"`
+	URL       string `json:"url"`
 }
 
 func NewRouter() *mux.Router {
@@ -27,7 +27,7 @@ func NewServer(h http.Handler) *http.Server {
 	var logFormatter handlers.LogFormatter = func(writer io.Writer, params handlers.LogFormatterParams) {
 		fields := Format{
 			URL:       params.URL.Path,
-			Timestamp: params.TimeStamp,
+			Timestamp: params.TimeStamp.Local().Format(time.RFC1123),
 		}
 
 		json.NewEncoder(writer).Encode(fields)
