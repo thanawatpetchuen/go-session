@@ -19,10 +19,10 @@ func main() {
 	}()
 
 	exit := make(chan os.Signal, 1)
-
 	signal.Notify(exit, os.Interrupt)
 
 	<-exit
+
 	if err := server.Close(); err != nil {
 		log.Fatal(err)
 	}
